@@ -1,0 +1,8 @@
+name: MommyServerMagic
+version: ${project.version}
+main: io.github.austerzockt.mommyservermagic.MommyServerMagic
+api-version: 1.16
+prefix: MSM
+authors: [ Auster ]
+description: Mommys Server Plugin.
+website: kakuzen.org

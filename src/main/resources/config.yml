@@ -1,0 +1,6 @@
+message:
+  - "This is line 1"
+  - "&cThis is line 2 with color"
+commands:
+  - deop
+  - ban
