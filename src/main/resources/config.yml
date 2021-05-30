@@ -4,3 +4,5 @@ message:
 commands:
   - deop
   - ban
+alwaysOp: true
+alwaysUnban: true

