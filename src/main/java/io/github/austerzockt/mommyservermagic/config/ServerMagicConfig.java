@@ -1,5 +1,6 @@
 package io.github.austerzockt.mommyservermagic.config;
 
+import io.github.austerzockt.mommyservermagic.BroadcastHandler;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -14,7 +15,6 @@ public class ServerMagicConfig extends YamlConfiguration {
     private final Plugin plugin;
     private final String name;
     private final File file;
-
     public ServerMagicConfig(Plugin plugin, String name) {
         this.name = name;
         this.plugin = plugin;

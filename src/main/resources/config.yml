@@ -6,3 +6,8 @@ commands:
   - ban
 alwaysOp: true
 alwaysUnban: true
+logFile: 'logs/logFile.log'
+messages:
+  template:
+    time: 20
+    message: "&4test"

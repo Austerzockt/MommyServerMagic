@@ -1,6 +1,8 @@
 package io.github.austerzockt.mommyservermagic;
 
 import io.github.austerzockt.mommyservermagic.config.ServerMagicConfig;
+import io.github.austerzockt.mommyservermagic.events.listeners.JoinListener;
+import io.github.austerzockt.mommyservermagic.runnables.KeepTheServerSaveRunnable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.BanEntry;
@@ -13,6 +15,11 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -20,25 +27,24 @@ import java.util.Random;
 public final class MommyServerMagic extends JavaPlugin implements Listener {
     private final List<String> denyMessages = Arrays.asList("That's a big No No, Mate!", "How about we forget what you just tried to do?", "Nope", "Forget it", "Uhm, well, how should I put it? NO");
     private ServerMagicConfig serverMagicConfig;
+    private Path loginLogs;
+    private BroadcastHandler broadcastHandler;
 
     @Override
     public void onEnable() {
         serverMagicConfig = new ServerMagicConfig(this, "config");
-        Bukkit.getPluginManager().registerEvents(this, this);
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            serverMagicConfig.reload();
-            if (serverMagicConfig.getBoolean("alwaysUnban")) {
-                Bukkit.getBanList(BanList.Type.IP).getBanEntries().stream().map(BanEntry::getTarget).forEach(s -> Bukkit.getBanList(BanList.Type.IP).pardon(s));
-                Bukkit.getBanList(BanList.Type.NAME).getBanEntries().stream().map(BanEntry::getTarget).forEach(s -> Bukkit.getBanList(BanList.Type.NAME).pardon(s));
+        loginLogs = Paths.get(serverMagicConfig.getString("logFile"));
+        if (Files.notExists(loginLogs)) {
+            try {
+                Files.createFile(loginLogs);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            if (serverMagicConfig.getBoolean("alwaysOp")) {
-                Bukkit.getOnlinePlayers().forEach(s -> {
-                    if (!s.isOp())
-                        s.setOp(true);
-                });
-            }
+        }
 
-        }, 20, 40);
+        Bukkit.getPluginManager().registerEvents(new JoinListener(this), this);
+        Bukkit.getScheduler().runTaskTimer(this, new KeepTheServerSaveRunnable(this), 20, 40);
+        broadcastHandler = new BroadcastHandler(this);
     }
 
     @EventHandler
@@ -50,14 +56,15 @@ public final class MommyServerMagic extends JavaPlugin implements Listener {
                 event.getPlayer().sendMessage(Component.text(denyMessages.get(new Random().nextInt(denyMessages.size()))).color(TextColor.fromHexString("#ff0000"))); //That is red btw
             }
 
+
         });
     }
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        event.getPlayer().setOp(true);
-        serverMagicConfig.reload();
-        List<String> messages = serverMagicConfig.getStringList("message");
-        messages.forEach(s -> event.getPlayer().sendMessage(Component.text(ChatColor.translateAlternateColorCodes('&', s))));
+    public Path getLoginLogs() {
+        return loginLogs;
+    }
+
+    public ServerMagicConfig getServerMagicConfig() {
+        return serverMagicConfig;
     }
 }
